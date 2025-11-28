@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerStats } from '../types';
 import { Compass, Zap, Coffee, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Map as MapIcon } from 'lucide-react';
@@ -40,7 +41,71 @@ const SportsGround: React.FC<SportsGroundProps> = ({ player, onComplete, onCance
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
   useEffect(() => { gameWonRef.current = gameWon; }, [gameWon]);
 
-  // Initialize Level
+  // --- Map Generation & Connectivity Logic ---
+
+  const ensureConnectivity = (grid: CellType[][], start: Position, end: Position, w: number, h: number) => {
+      // 1. Check if path exists using BFS
+      const hasPath = () => {
+          const q = [start];
+          const visited = new Set<string>();
+          visited.add(`${start.x},${start.y}`);
+          const dirs = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+          
+          while(q.length > 0) {
+              const curr = q.shift()!;
+              if (curr.x === end.x && curr.y === end.y) return true;
+              
+              for(const d of dirs) {
+                  const nx = curr.x + d.dx;
+                  const ny = curr.y + d.dy;
+                  if(nx >= 0 && nx < w && ny >= 0 && ny < h && grid[ny][nx] !== 'WALL' && !visited.has(`${nx},${ny}`)) {
+                      visited.add(`${nx},${ny}`);
+                      q.push({x:nx, y:ny});
+                  }
+              }
+          }
+          return false;
+      };
+
+      if (hasPath()) return;
+
+      // 2. If no path, Carve one (Simple biased random walk)
+      let cx = start.x;
+      let cy = start.y;
+      
+      // Safety break
+      let steps = 0;
+      while ((cx !== end.x || cy !== end.y) && steps < w * h * 2) {
+          steps++;
+          // Clear wall if present (don't overwrite EXIT or ITEMS if we can avoid, but map is mostly empty here)
+          if (grid[cy][cx] === 'WALL') grid[cy][cx] = 'EMPTY';
+
+          // Determine moves that get closer to target
+          const moves = [];
+          if (cx < end.x) moves.push({dx:1, dy:0});
+          if (cx > end.x) moves.push({dx:-1, dy:0});
+          if (cy < end.y) moves.push({dx:0, dy:1});
+          if (cy > end.y) moves.push({dx:0, dy:-1});
+
+          // Add randomness to prevent straight lines
+          if (Math.random() < 0.4) {
+               const randDir = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}][Math.floor(Math.random()*4)];
+               moves.push(randDir);
+          }
+
+          // Pick a move
+          if (moves.length > 0) {
+              const move = moves[Math.floor(Math.random() * moves.length)];
+              cx = Math.max(0, Math.min(w-1, cx + move.dx));
+              cy = Math.max(0, Math.min(h-1, cy + move.dy));
+          } else {
+              break;
+          }
+      }
+      // Ensure End is not Wall
+      if (grid[end.y][end.x] === 'WALL') grid[end.y][end.x] = 'EXIT';
+  };
+
   const startLevel = (lvl: number) => {
     const w = BASE_W + lvl;
     const h = BASE_H + Math.floor(lvl / 2);
@@ -48,46 +113,71 @@ const SportsGround: React.FC<SportsGroundProps> = ({ player, onComplete, onCance
     const itemsCount = 3 + lvl;
     const coffeeCount = Math.floor(lvl / 2) + 1;
 
+    // 1. Init Empty Map
     const newMap: CellType[][] = Array(h).fill(null).map(() => Array(w).fill('EMPTY'));
     
-    // Walls
+    // 2. Place Random Walls
     const wallChance = 0.15 + (lvl * 0.02);
     for(let y=0; y<h; y++) {
         for(let x=0; x<w; x++) {
-            if (x===0 && y===0) continue;
+            if (x===0 && y===0) continue; // Start pos
             if (Math.random() < wallChance) newMap[y][x] = 'WALL';
         }
     }
 
-    // Items & Exit placement (omitted checks for brevity, assuming probabilistic placement works well enough for demo)
+    // 3. Place Exit (Ensure it's far from start)
+    let exitPos = {x: w-1, y: h-1};
+    let exitPlaced = false;
+    let attempts = 0;
+    while(!exitPlaced && attempts < 100) {
+        attempts++;
+        // Try to place in the bottom-right quadrant
+        const x = Math.floor(Math.random() * Math.floor(w/2)) + Math.floor(w/2);
+        const y = Math.floor(Math.random() * Math.floor(h/2)) + Math.floor(h/2);
+        if (newMap[y][x] !== 'WALL') {
+             newMap[y][x] = 'EXIT';
+             exitPos = {x, y};
+             exitPlaced = true;
+        }
+    }
+    if(!exitPlaced) {
+        // Force exit
+        newMap[h-1][w-1] = 'EXIT';
+        exitPos = {x: w-1, y: h-1};
+    }
+
+    // 4. Ensure Path Exists
+    ensureConnectivity(newMap, {x:0, y:0}, exitPos, w, h);
+
+    // 5. Place Items (Only on EMPTY cells)
     let placed = 0;
-    while(placed < itemsCount) {
+    let loops = 0;
+    while(placed < itemsCount && loops < 200) {
+        loops++;
         const x = Math.floor(Math.random() * w);
         const y = Math.floor(Math.random() * h);
         if (newMap[y][x] === 'EMPTY' && (x!==0 || y!==0)) { newMap[y][x] = 'ITEM_IDEA'; placed++; }
     }
     placed = 0;
-    while(placed < coffeeCount) {
+    loops = 0;
+    while(placed < coffeeCount && loops < 200) {
+        loops++;
         const x = Math.floor(Math.random() * w);
         const y = Math.floor(Math.random() * h);
         if (newMap[y][x] === 'EMPTY' && (x!==0 || y!==0)) { newMap[y][x] = 'ITEM_COFFEE'; placed++; }
     }
-    let exitPlaced = false;
-    while(!exitPlaced) {
-        const x = Math.floor(Math.random() * w);
-        const y = Math.floor(Math.random() * h);
-        if (x > w/2 && y > h/2 && newMap[y][x] !== 'WALL') { newMap[y][x] = 'EXIT'; exitPlaced = true; }
-    }
     
-    // Mobs
+    // 6. Spawn Mobs (Only on EMPTY cells, away from start)
     const newMobs = [];
-    for(let i=0; i<mobCount; i++) {
-        let mx, my;
-        do {
-            mx = Math.floor(Math.random() * w);
-            my = Math.floor(Math.random() * h);
-        } while (mx < 3 && my < 3);
-        newMobs.push({ x: mx, y: my });
+    loops = 0;
+    while(newMobs.length < mobCount && loops < 200) {
+        loops++;
+        const mx = Math.floor(Math.random() * w);
+        const my = Math.floor(Math.random() * h);
+        // Avoid start area and walls
+        if ((mx > 2 || my > 2) && newMap[my][mx] === 'EMPTY') {
+            newMobs.push({ x: mx, y: my });
+        }
     }
 
     setMap(newMap);
