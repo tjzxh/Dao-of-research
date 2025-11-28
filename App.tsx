@@ -1,14 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { GameState, View, PlayerStats, SkillStats, GameLocation, RandomEvent, PaperResult, Reward } from './types';
 import Dashboard from './components/Dashboard';
 import QuizTower from './components/QuizTower';
 import PaperForge from './components/PaperForge';
 import NPCInteraction from './components/NPCLab';
-import WorldMap, { LOCATIONS } from './components/WorldMap';
+import WorldMap from './components/WorldMap';
 import SocialHub from './components/SocialHub';
 import SportsGround from './components/SportsGround';
-import { generateRandomEvent } from './services/geminiService';
 import { LayoutDashboard, Gamepad2, Scroll, MessageSquare, Map as MapIcon, Compass, Bell, Book, Star, Gift } from 'lucide-react';
 
 const INITIAL_PLAYER: PlayerStats = {
@@ -42,6 +40,22 @@ const INITIAL_SKILLS: SkillStats = {
   presentation: 5,
   survival: 20
 };
+
+// Helper component moved to top to avoid hoisting issues
+const NavBtn = ({ active, onClick, icon, label }: any) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-3 px-3 lg:px-4 py-3 rounded-xl transition-all duration-300 group ${
+      active 
+        ? 'bg-gradient-to-r from-indigo-900/80 to-slate-800 text-white shadow-lg border border-indigo-500/30' 
+        : 'hover:bg-slate-800/50 hover:text-white text-slate-400'
+    }`}
+    title={label}
+  >
+    <span className={`transition-colors ${active ? 'text-cyan-400' : 'text-slate-500 group-hover:text-cyan-400'}`}>{icon}</span>
+    <span className="hidden lg:block font-medium text-sm tracking-wide">{label}</span>
+  </button>
+);
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -301,18 +315,3 @@ export default function App() {
     </div>
   );
 }
-
-const NavBtn = ({ active, onClick, icon, label }: any) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-3 px-3 lg:px-4 py-3 rounded-xl transition-all duration-300 group ${
-      active 
-        ? 'bg-gradient-to-r from-indigo-900/80 to-slate-800 text-white shadow-lg border border-indigo-500/30' 
-        : 'hover:bg-slate-800/50 hover:text-white text-slate-400'
-    }`}
-    title={label}
-  >
-    <span className={`transition-colors ${active ? 'text-cyan-400' : 'text-slate-500 group-hover:text-cyan-400'}`}>{icon}</span>
-    <span className="hidden lg:block font-medium text-sm tracking-wide">{label}</span>
-  </button>
-);

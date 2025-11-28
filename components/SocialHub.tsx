@@ -8,7 +8,7 @@ interface SocialHubProps {
   onBuffReceived: (buff: string) => void;
 }
 
-const SocialHub: React.FC<SocialHubProps> = ({ player, onBuffReceived }) => {
+const SocialHub: React.FC<SocialHubProps> = ({ player }) => {
   const [diaryEntry, setDiaryEntry] = useState<string | null>(player.diary?.content || null);
   const [loadingDiary, setLoadingDiary] = useState(false);
   

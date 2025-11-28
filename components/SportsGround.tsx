@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerStats } from '../types';
-import { Compass, Zap, Coffee, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Map as MapIcon, RotateCcw, Footprints } from 'lucide-react';
+import { Compass, Zap, Coffee, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Map as MapIcon } from 'lucide-react';
 
 interface SportsGroundProps {
   player: PlayerStats;

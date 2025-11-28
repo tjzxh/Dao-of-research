@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PlayerStats, ChatMessage, NPCDef, RandomEvent, Reward } from '../types';
 import { getNPCResponse, generateNPCTask, evaluateChatReward } from '../services/geminiService';
-import { Send, Loader2, Gift } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 
 interface NPCInteractionProps {
   player: PlayerStats;

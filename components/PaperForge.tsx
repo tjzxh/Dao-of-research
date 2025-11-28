@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generatePaperReview } from '../services/geminiService';
-import { Loader2, Zap, Bomb, Coffee, Crosshair } from 'lucide-react';
+import { Loader2, Bomb, Coffee, Crosshair } from 'lucide-react';
 import { SkillStats, PaperResult } from '../types';
 
 interface PaperForgeProps {

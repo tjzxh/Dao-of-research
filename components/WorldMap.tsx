@@ -1,5 +1,5 @@
 import React from 'react';
-import { GameLocation, LocationId } from '../types';
+import { GameLocation } from '../types';
 import { FlaskConical, Coffee, BookOpen, Home } from 'lucide-react';
 
 export const LOCATIONS: GameLocation[] = [

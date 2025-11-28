@@ -135,7 +135,7 @@ const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length
 
 // --- SERVICES ---
 
-export const generateQuizQuestions = async (rank: string): Promise<QuizQuestion[]> => {
+export const generateQuizQuestions = async (_rank: string): Promise<QuizQuestion[]> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 600));
     
@@ -162,7 +162,7 @@ export const getNPCResponse = async (history: { role: string, parts: { text: str
     return pickRandom(npcData.generic);
 };
 
-export const evaluateChatReward = async (history: { role: string, parts: { text: string }[] }[], npc: NPCDef): Promise<Reward | null> => {
+export const evaluateChatReward = async (history: { role: string, parts: { text: string }[] }[], _npc: NPCDef): Promise<Reward | null> => {
     // Pure logic: 30% chance if history length > 3
     if (history.length > 3 && Math.random() < 0.3) {
         const type = pickRandom(['STAMINA', 'MOOD', 'INSPIRATION', 'CITATION'] as const);
@@ -190,7 +190,7 @@ export const generateNPCTask = async (npc: NPCDef): Promise<RandomEvent> => {
     };
 }
 
-export const generateRandomEvent = async (context: string): Promise<RandomEvent> => {
+export const generateRandomEvent = async (_context: string): Promise<RandomEvent> => {
     return pickRandom(RANDOM_EVENTS);
 };
 
@@ -214,7 +214,7 @@ export const generateDailyMotto = async (player: PlayerStats): Promise<string> =
     return pickRandom(list);
 }
 
-export const analyzeTreeHolePost = async (text: string): Promise<string> => {
+export const analyzeTreeHolePost = async (_text: string): Promise<string> => {
     const responses = [
         "抱抱你，一切都会好起来的。",
         "太真实了，我也经历过。",
@@ -226,7 +226,7 @@ export const analyzeTreeHolePost = async (text: string): Promise<string> => {
     return pickRandom(responses);
 };
 
-export const generatePaperReview = async (score: number, skills: any): Promise<PaperResult> => {
+export const generatePaperReview = async (score: number, _skills: any): Promise<PaperResult> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const title = `《${pickRandom(TITLE_PREFIXES)}${pickRandom(TITLE_SUBJECTS)}${pickRandom(TITLE_SUFFIXES)}》`;
